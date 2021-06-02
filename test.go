@@ -7,6 +7,7 @@ import (
 	"html/template"
 	"net/http"
 	"strconv"
+	"strings"
 )
 
 var html_text = template.Must(template.New("https").Parse(`
@@ -366,6 +367,69 @@ func main(){
 			"message":"服务器不支持请求的HTTP协议的版本，无法完成处理",
 		})
 	})
+
+	engine.Handle("GET","/get", func(context *gin.Context) {
+		query := context.Request.URL.Query()
+		context.JSON(200,gin.H{
+			"code":505,
+			"status":"HTTP Version not supported",
+			"message":"服务器不支持请求的HTTP协议的版本，无法完成处理",
+			"data":query,
+		})
+	})
+
+	engine.Handle("POST","/post", func(context *gin.Context) {
+		json := make(map[string]interface{})
+		contentType := strings.ToLower(context.Request.Header.Get("content-type"))
+		fmt.Println(contentType)
+		if strings.Contains(contentType,"multipart/form-data"){
+			err := context.Request.ParseMultipartForm(128)
+			if err != nil {
+				fmt.Println(err.Error())
+			}
+			form := context.Request.Form
+			for k,v :=range form{
+				if len(v) == 1 {
+					json[k] = v[0]
+				}else{
+					json[k] = strings.Join(v,";")
+				}
+			}
+		}else if  strings.Contains(contentType,"x-www-form-urlencoded") {
+			err := context.Request.ParseForm()
+			if err != nil {
+				fmt.Println(err.Error())
+			}
+			form := context.Request.Form
+			for k,v :=range form{
+				fmt.Println(len(v))
+				if len(v) == 1 {
+					json[k] = v[0]
+				}else{
+					json[k] = strings.Join(v,";")
+				}
+			}
+		}else{
+			context.BindJSON(&json)
+		}
+
+		context.JSON(200,gin.H{
+			"code":505,
+			"status":"HTTP Version not supported",
+			"message":"服务器不支持请求的HTTP协议的版本，无法完成处理",
+			"data":json,
+		})
+	})
+
+	engine.Handle("POST","/api", func(context *gin.Context) {
+		context.JSON(200,gin.H{
+			"code":505,
+			"status":"HTTP Version not supported",
+			"message":"服务器不支持请求的HTTP协议的版本，无法完成处理",
+		})
+	})
+
+
 
 	outputStr := strconv.Itoa(outport)
 	fmt.Println("打开浏览器：http://localhost:"+outputStr)
